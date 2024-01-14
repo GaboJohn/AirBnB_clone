@@ -41,77 +41,94 @@ class HBNBCommand(cmd.Cmd):
         except NameError:
             print("** class doesn't exist **")
 
-    def do_show(self, mint):
+    def do_show(self, args):
         """
         Prints the string representation of an instance based on the class name and id.
         Usage: show <class name> <id>
         """
-        args = mint.split()
         if not args:
             print("** class name missing **")
             return
+
+        arg_list = args.spilt()
+        class_name = arg_list[0]
         try:
-            class_name = args[0]
-            if class_name not in ["BaseModel"]:
-                raise NameError
-            obj_id = args[1]
-            key = class_name + "." + obj_id
+            eval(class_name)
+        except NameError:
+            print("** class doesn't exist **")
+            return
+
+        if len(arg_list) < 2:
+            print("** instance id missing **")
+            return
+
+            obj_id = arg_list[1]
+            key = "{}.{}".format(class_name, obj_id)
             obj = storage.all().get(key)
             if obj:
                 print(obj)
             else:
                 print("** no instance found **")
-        except IndexError:
-            print("** instance id missing **")
-        except NameError:
-            print("** class doesn't exist **")
 
-    def do_destroy(self, mint):
+    def do_destroy(self, args):
         """
         Deletes an instance based on the class name and id.
         Usage: destroy <class name> <id>
         """
-        args = mint.split()
         if not args:
             print("** class name missing **")
             return
-        try:
-            class_name = args[0]
-            if class_name not in ["BaseModel"]:
-                raise NameError
-            obj_id = args[1]
-            key = class_name + "." + obj_id
-            obj = storage.all().get(key)
-            if obj:
-                del storage.all()[key]
-                storage.save()
-            else:
-                print("** no instance found **")
-        except IndexError:
-            print("** instance id missing **")
-        except NameError:
-            print("** class doesn't exist **")
 
-    def do_update(self, mint):
+        arg_list = args.split()
+        class_name = args_list[0]
+        try:
+            eval(class_name)
+        except NameError:
+             print("** class doesn't exist **")
+             return
+        
+        if len(arg_list) < 2:
+             print("** instance id missing **")
+             return
+
+        obj_id = arg_list[1]
+        key = "{}.{}".format(class_name, obj_id)
+        obj = storage.all().get(key)
+        if obj:
+            del storage.all()[key]
+            storage.save()
+        else:
+            print("** no instance found **")
+
+    def do_update(self, args):
         """
         Updates an instance based on the class name and id by adding or updating attribute.
         Usage: update <class name> <id> <attribute name> "<attribute value>"
         """
-        args = mint.split()
         if not args:
             print("** class name missing **")
             return
+
+        args_list = args.split()
+        class_name = args_list[0]
         try:
-            class_name = args[0]
-            if class_name not in ["BaseModel"]:
-                raise NameError
+            eval(class_name)
+        except NameError:
+            print("** class doesn't exist **")
+            return
+
+        if len(arg_list) < 2:
+            print("** instance id missing **")
+            return
+
             obj_id = args[1]
-            key = class_name + "." + obj_id
+            key = "{}.{}".format(class_name, obj_id)
             obj = storage.all().get(key)
             if obj:
                 if len(args) < 3:
                     print("** attribute name missing **")
                     return
+
                 attr_name = args[2]
                 if len(args) < 4:
                     print("** value missing **")
@@ -125,25 +142,22 @@ class HBNBCommand(cmd.Cmd):
                     print("** attribute doesn't exist **")
             else:
                 print("** no instance found **")
-        except IndexError:
-            print("** instance id missing **")
-        except NameError:
-            print("** class doesn't exist **")
 
-    def do_all(self, mint):
+    def do_all(self, args):
         """
         Prints all string representation of all instances based or not on the class name.
         Usage: all [<class name>]
         """
-        args = mint.split()
+
+        args_list = args.split()
         objects = storage.all()
-        if not args:
+        
+        if not arg_list:
             print([str(obj) for obj in objects.values()])
         else:
             try:
-                class_name = args[0]
-                if class_name not in ["BaseModel"]:
-                    raise NameError
+                class_name = arg_list[0]
+                eval(class_name)
                 filt_obj = [str(obj) for obj in objects.values() if obj.__class__.__name__ == class_name]
                 print(filt_obj)
             except NameError:
