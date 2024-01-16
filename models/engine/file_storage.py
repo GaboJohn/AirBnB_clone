@@ -2,108 +2,37 @@
 """Defines the FileStorage class."""
 
 import json
-import datetime
+
 
 class FileStorage:
-    """Serializes instances to a JSON file and deserializes JSON file to instances."""
+    """Represent an abstracted storage engine."""
     __file_path = "file.json"
     __objects = {}
 
     def all(self):
-        """Returns the dictionary __objects."""
-        return self.__objects
+        """Return the dictionary __objects."""
+        return FileStorage.__objects
 
     def new(self, obj):
-        """Sets in __objects the obj with key <obj class name>.id."""
-        if obj:
-            key = "{}.{}".format(type(obj).__name__, obj.id)
-            self.__objects[key] = obj
+        """Set in __objects obj with key <obj_class_name>.id"""
+        obj_class_name = obj.__class__.__name__
+        FileStorage.__objects["{}.{}".format(obj_class_name, obj.id)] = obj
 
     def save(self):
-        """Serializes __objects to the JSON file."""
-        new_dict = {}
-        for key, value in self.__objects.items():
-            new_dict[key] = value.to_dict()
-
-        with open(self.__file_path, 'w', encoding='utf-8') as file:
-            json.dump(new_dict, file)
-
-    def get_class_instances(self, class_name):
-        """Returns a list of instances of the specified class."""
-        instances = []
-        for key, value in self.__objects.items():
-             if class_name in key:
-                 instances.append(value)
-        return instances
-
-    def classes(self):
-        """Returns dictionary of valid classes and their references."""
-        from models.base_model import BaseModel
-        from models.user import User
-        from models.place import Place
-        from models.city import City
-        from models.state import State
-        from models.amenity import Amenity
-        from models.review import Review
-
-        classes_dict = {
-            "BaseModel": {
-                "id": str,
-                "created_at": datetime.datetime,
-                "updated_at": datetime.datetime
-            },
-            "User": {
-                "email": str,
-                "password": str,
-                "first_name": str,
-                "last_name": str
-            },
-            "Place": {
-                "city_id": str,
-                "name": str,
-                "user_id": str,
-                "description": str,
-                "number_rooms": int,
-                "number_bathrooms": int,
-                "max_guest": int,
-                "price_by_night": int,
-                "latitude": float,
-                "longitude": float,
-                "amenity_ids": list
-            },
-            "City": {
-                "state_id": str,
-                "name": str
-            },
-            "State": {
-                "name": str
-            },
-            "Amenity": {
-                "name": str
-            },
-            "Review": {
-                "place_id": str,
-                "user_id": str,
-                "text": str
-            }
-        }
-        return classes_dict
+        """Serialize __objects to the JSON file __file_path."""
+        objects_dict = FileStorage.__objects
+        objects_dict_serialized = {obj: objects_dict[obj].to_dict() for obj in objects_dict.keys()}
+        with open(FileStorage.__file_path, "w") as f:
+            json.dump(objects_dict_serialized, f)
 
     def reload(self):
-        """Deserializes the JSON file to __objects."""
+        """Deserialize the JSON file __file_path to __objects, if it exists."""
         try:
-            with open(self.__file_path, 'r', encoding='utf-8') as file:
-                loaded_objs = json.load(file)
-                for key, obj_dict in loaded_objs.items():
-                    class_name, obj_id = key.split('.')
-                    try:
-                        obj_class = self.classes().get(class_name)
-                        if obj_class:
-                            obj_instance = obj_class(**obj_dict)
-                            self.__objects[key] = obj_instance
-                        else:
-                            print(f"Class '{class_name}' not found")
-                    except Exception as e:
-                        print(f"Error creating instance: {e}")
+            with open(FileStorage.__file_path) as f:
+                objects_dict_serialized = json.load(f)
+                for serialized_obj in objects_dict_serialized.values():
+                    class_name = serialized_obj["__class__"]
+                    del serialized_obj["__class__"]
+                    #self.new(eval(class_name)(**serialized_obj))
         except FileNotFoundError:
-            pass                            
+            return

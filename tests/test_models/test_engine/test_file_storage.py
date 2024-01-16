@@ -2,52 +2,49 @@
 """Defines unittests for models/engine/file_storage.py."""
 
 import unittest
-import os
-import json
-import models
-from datetime import datetime
-from models.base_model import BaseModel
 from models.engine.file_storage import FileStorage
+from models.base_model import BaseModel
+import os
 from models.user import User
 
 class TestFileStorage(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Make a backup of the existing file.json if it exists
+        if os.path.exists("file.json"):
+            os.rename("file.json", "file.json.bak")
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore the original file.json if a backup exists
+        if os.path.exists("file.json.bak"):
+            os.rename("file.json.bak", "file.json")
+
     def setUp(self):
-        """Set up the test environment."""
-        self.file_path = "test_file.json"
         self.storage = FileStorage()
 
     def tearDown(self):
-        """Tear down the test environment."""
-        try:
-            os.remove(self.file_path)
-        except FileNotFoundError:
-            pass
+        # Clean up the objects in the storage
+        self.storage._FileStorage__objects = {}
 
     def test_all(self):
-        """Test the all method."""
-        obj_dict = {'id': '123', 'name': 'test'}
-        obj = BaseModel(**obj_dict)
-        self.storage.new(obj)
-        self.storage.save()
-        all_objs = self.storage.all()
-        self.assertIsInstance(all_objs, dict)
+        # Ensure the all method returns a dictionary
+        self.assertIsInstance(self.storage.all(), dict)
 
     def test_new(self):
-        """Test the new method."""
-        obj_dict = {'id': '123', 'name': 'test'}
-        obj = BaseModel(**obj_dict)
-        self.storage.new(obj)
-        all_objs = self.storage.all()
+        # Ensure new method adds an object to the storage
+        user = User()
+        self.storage.new(user)
+        self.assertIn("User." + user.id, self.storage._FileStorage__objects)
 
     def test_save_reload(self):
-        """Test the save and reload methods."""
-        obj_dict = {'id': '123', 'name': 'test'}
-        obj = BaseModel(**obj_dict)
-        self.storage.new(obj)
+        # Ensure save and reload methods work together
+        user = User()
+        self.storage.new(user)
         self.storage.save()
-
         new_storage = FileStorage()
-        all_objs = new_storage.all()
+        self.assertIn("User." + user.id, new_storage._FileStorage__objects)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

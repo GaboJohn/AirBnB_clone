@@ -9,19 +9,3 @@ class User(BaseModel):
     password = ""
     first_name = ""
     last_name = ""
-
-    def __init__(self, *args, **kwargs):
-         """Initialize User instance."""
-         super().__init__(*args, **kwargs)
-
-    @classmethod
-    def all(cls):
-        """Return a list of all User instances."""
-        from models import storage
-        return [obj for obj in storage.all().values() if isinstance(obj, cls)]
-
-    @classmethod
-    def count(cls):
-        """Return the number of User instances."""
-        return len(cls.all())
-
